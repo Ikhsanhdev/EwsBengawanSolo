@@ -48,6 +48,41 @@ function initMap() {
         ]
     });
 
+    function loadDAS(url, color) {
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                data.features.forEach(f => {
+                    if (!f.properties) f.properties = {};
+                    f.properties.fillColor = color;
+                });
+
+                map.data.addGeoJson(data);
+            });
+    }
+
+    loadDAS('/data/pembagian_subdas.json', 'red');
+    loadDAS('/data/reach.json', 'blue');
+    loadDAS('/data/subdas_bs_hulu_v2.json', 'yellow');
+
+    map.data.setStyle(function(feature) {
+        const fillColor = feature.getProperty('fillColor') || 'gray';
+        return {
+            fillColor: fillColor,
+            fillOpacity: 0.3,
+            strokeColor: 'white',
+            strokeWeight: 0.7
+        };
+    });
+
+    map.data.addListener('click', function(event) {
+        const name = event.feature.getProperty('name');
+        new google.maps.InfoWindow({
+            content: `<strong>${name}</strong>`,
+            position: event.latLng
+        }).open(map);
+    });
+
     const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ location: jakarta }, (results, status) => {
         if (status === "OK" && results[0]) {
